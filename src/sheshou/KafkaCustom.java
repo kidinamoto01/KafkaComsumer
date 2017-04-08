@@ -53,20 +53,4 @@ public class KafkaCustom {
         }
     }
 
-   /* private static Map<TopicPartition, Long> process(Map<String, ConsumerRecords<byte[], byte[]>> records) {
-        Map<TopicPartition, Long> processedOffsets = new HashMap<>();
-        for (Map.Entry<String, ConsumerRecords<byte[], byte[]>> recordMetadata : records.entrySet()) {
-            List<ConsumerRecord<byte[], byte[]>> recordsPerTopic = recordMetadata.getValue().records();
-            for (int i = 0; i < recordsPerTopic.size(); i++) {
-                ConsumerRecord<byte[], byte[]> record = recordsPerTopic.get(i);
-                // process record
-                try {
-                    processedOffsets.put(record.topicAndPartition(), record.offset());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return processedOffsets;
-    }*/
 }
