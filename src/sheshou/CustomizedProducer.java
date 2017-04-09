@@ -15,20 +15,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
+import static java.lang.Thread.sleep;
+
 /**
  * Created by b on 17/4/8.
  */
 public class CustomizedProducer {
-    Producer<String, String> producer ;
+    static Producer<String, String> producer ;
     static KafkaConsumer<String, String> consumer;
+    static String[] compares={"","",""};
 
-    int iKey =0;
+    static int iKey =0;
     public void initial(){
         //确认Consumer的属性
         Properties comsumerProps = new Properties();
         comsumerProps.put("bootstrap.servers", "localhost:9092");
         comsumerProps.put("group.id", "group1");
         comsumerProps.put("enable.auto.commit", "false");
+        comsumerProps.put("auto.offset.reset", "latest");
         comsumerProps.put("session.timeout.ms", "30000");
         comsumerProps.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         comsumerProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
@@ -56,7 +60,7 @@ public class CustomizedProducer {
         //接受信息的Topic
         SetReceiveTopic("test");
     }
-    public void SendMessage(String strMsg,String topicName){
+    public static void SendMessage(String strMsg,String topicName){
         producer.send(new ProducerRecord<String, String>(topicName,
                 Integer.toString(iKey), strMsg));
         System.out.println("***Msg: "+strMsg+" offset "+iKey);
@@ -69,12 +73,22 @@ public class CustomizedProducer {
     /*
     * 将字符串通过分隔符拆分；然后将相关字段生成变量
     * */
-    public TargetClass TransformMessage(String input){
+    public static  Boolean TransformMessage(String input,long i ){
 
         String[] parts = input.split("-");
 
-        TargetClass t = new TargetClass(parts[1],parts[2],parts[3],parts[4]);
-        return t;
+        System.out.println("i= "+compares[1]);
+        compares[((int)i)%3]=parts[1]+parts[2];
+        System.out.println("compare begin");
+        System.out.println(compares[0]);
+        System.out.println(compares[1]);
+        System.out.println(compares[2]);
+        System.out.println("compare end");
+       // TargetClass t = new TargetClass(parts[1],parts[2],parts[3],parts[4]);
+        if(compares[0].equals(compares[1])&&compares[1].equals(compares[2]))
+            return true;
+        else
+            return  false;
     }
 
     public static void main(String[] args) throws Exception{
@@ -85,34 +99,30 @@ public class CustomizedProducer {
         //接收消息
         while (true) {
             ConsumerRecords<String, String> records = consumer.poll(100);
+            if (records.isEmpty()) {
+                sleep(1000);
+            } else {
 
 
-            for (TopicPartition partition : records.partitions()) {
+                for (TopicPartition partition : records.partitions()) {
 
-                List<ConsumerRecord<String, String>> partitionRecords = records.records(partition);
+                    List<ConsumerRecord<String, String>> partitionRecords = records.records(partition);
 
-                for (ConsumerRecord<String, String> record : partitionRecords) {
+                    for (ConsumerRecord<String, String> record : partitionRecords) {
 
-                    System.out.println("Thread = " + Thread.currentThread().getName() + " ");
-                    System.out.printf("partition = %d, offset = %d, key = %s, value = %s", record.partition(), record.offset(), record.key(), record.value());
-                    System.out.println("\n");
+                       //打印接收到的信息
+                       System.out.println("**offset**"+record.offset()+"****receive****" + record.value());
+                       //判断是否为攻击
+                       if(TransformMessage(record.value(),record.offset()))
+                           System.out.println("found attack");
+                            SendMessage(record.value(),"test_topic");
+                    }
+                    // consumer.commitSync();
+                    long lastOffset = partitionRecords.get(partitionRecords.size() - 1).offset();
+                    consumer.commitSync(Collections.singletonMap(partition, new OffsetAndMetadata(lastOffset + 1)));
                 }
-                // consumer.commitSync();
-                long lastOffset = partitionRecords.get(partitionRecords.size() - 1).offset();
-                consumer.commitSync(Collections.singletonMap(partition, new OffsetAndMetadata(lastOffset + 1)));
             }
         }
     }
-    class TargetClass{
-        private String type; //类型
-        private String ip1; //源IP
-        private String ip2; //目标IP
-        private String eventTime; //发生时间
-        public TargetClass(String str1, String str2,String str3,String str4){
-            this.type=str1;
-            this.ip1= str2;
-            this.ip2 = str3;
-            this.eventTime = str4;
-        }
-    }
+
 }
