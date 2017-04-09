@@ -13,6 +13,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
 //import ProducerRecord packages
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 
@@ -35,7 +36,7 @@ public class SimpleProducer {
         Properties props = new Properties();
 
         //Assign localhost id
-        props.put("bootstrap.servers", "localhost:9092");
+       /* props.put("bootstrap.servers", "localhost:9092");
 
         //Set acknowledgements for producer requests.
         props.put("acks", "all");
@@ -54,18 +55,24 @@ public class SimpleProducer {
 
         props.put("key.serializer",
                 StringSerializer.class.getName());
-        props.put("value.serializer",
+        props.put("val®ue.serializer",
                 StringSerializer.class.getName());
 
+*/
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.RETRIES_CONFIG, 0);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
 
         Producer<String, String> producer = new KafkaProducer
                 <String, String>(props);
 
         for(int i = 0; i < 10000; i++){
             producer.send(new ProducerRecord<String, String>(topicName,
-                    Integer.toString(i), Integer.toString(i)));
-            System.out.println("***"+i);
-            sleep(100);
+                    Integer.toString(i), "1-2-3-4-5"));
+            System.out.println("***");
+            sleep(1000);
         }
         System.out.println("Message sent successfully");
         producer.close();

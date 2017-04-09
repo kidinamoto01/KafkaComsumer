@@ -15,6 +15,7 @@ public class KafkaCustom {
     public static void main(String[] args) {
         Properties props = new Properties();
         props.put("bootstrap.servers", "localhost:9092");
+        props.put("zookeeper", "localhost:2181");
         props.put("group.id", "group1");
         props.put("enable.auto.commit", "false");
         props.put("session.timeout.ms", "30000");
@@ -22,7 +23,7 @@ public class KafkaCustom {
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
         KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(props);
-        consumer.subscribe(Arrays.asList("test"));
+        consumer.subscribe(Arrays.asList("test","test-topic"));
         boolean isRunning = true;
         /* (isRunning) {
             Map<String, ConsumerRecords<byte[], byte[]>> records = consumer.poll(1000);

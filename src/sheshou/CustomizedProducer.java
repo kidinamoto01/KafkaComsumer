@@ -114,8 +114,10 @@ public class CustomizedProducer {
                        System.out.println("**offset**"+record.offset()+"****receive****" + record.value());
                        //判断是否为攻击
                        if(TransformMessage(record.value(),record.offset()))
-                           System.out.println("found attack");
-                            SendMessage(record.value(),"test_topic");
+                       {
+                            System.out.println("found attack");
+                            SendMessage(compares[0],"test_topic");
+                       }
                     }
                     // consumer.commitSync();
                     long lastOffset = partitionRecords.get(partitionRecords.size() - 1).offset();
